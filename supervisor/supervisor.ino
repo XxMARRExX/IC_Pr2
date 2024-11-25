@@ -12,6 +12,8 @@
 const int SPI_CS_PIN = 3; // Pin CS del MCP2515
 MCP_CAN CAN(SPI_CS_PIN);
 
+#define MAX_COMMAND_SIZE 50 // Tamaño máximo del comando
+
 char inputBuffer[MAX_COMMAND_SIZE]; // Buffer para el comando
 int bufferIndex = 0;                // Índice del buffer
 
