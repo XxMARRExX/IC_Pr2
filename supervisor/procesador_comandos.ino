@@ -22,7 +22,7 @@ void processCommand(char* command) {
 
   } else if (strcmp(token, "help") == 0) {
 
-    
+    Serial.println(F(" help."));
 
   } else {
 
@@ -46,21 +46,32 @@ void us_processor(char* token){
 
   if(strcmp(token, "one-shot") == 0){
 
-    Serial.println(F(" one-shot"));
+    Serial.println(F(" one-shot."));
+
+  }else if (strcmp(token, "on") == 0){
+
+    Serial.println(F(" on."));
+    token = strtok(NULL, " ");
 
   }else if (strcmp(token, "off") == 0){
 
-    Serial.println(F(" off"));
+    Serial.println(F(" off."));
 
 
-  }else if (strcmp(token, "status") == 0){
+  }else if (strcmp(token, "unit") == 0){
 
-    Serial.println(F(" status"));
-
-  }else if (strcmp(token, "status") == 0){
-    //Serial.println(F(" mas parametros"));
+    Serial.println(F(" unit."));
     token = strtok(NULL, " ");
 
-  }
+  }else if (strcmp(token, "delay") == 0){
 
+    Serial.println(F(" delay."));
+    token = strtok(NULL, " ");
+
+  }else if (strcmp(token, "status") == 0){
+
+    Serial.println(F(" status."));
+
+  }
+  
 }

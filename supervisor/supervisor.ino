@@ -1,9 +1,16 @@
 /**
  * Author: Cristian Marrero Vega
  * Date: 23/11/2024
+ * Librería instalada: mcp_can.
  */
 
+#include <SPI.h>
+#include "mcp_can.h"
+
 #define MAX_COMMAND_SIZE 50 // Tamaño máximo del comando
+
+const int SPI_CS_PIN = 3; // Pin CS del MCP2515
+MCP_CAN CAN(SPI_CS_PIN);
 
 char inputBuffer[MAX_COMMAND_SIZE]; // Buffer para el comando
 int bufferIndex = 0;                // Índice del buffer
@@ -12,6 +19,17 @@ void setup(){
   // Inicia la comunicación serie
   Serial.begin(9600);
   Serial.println(F("Listo para recibir comandos..."));
+
+  // Inicializa el MCP2515 con una velocidad de 500 kbps
+  if (CAN.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ) == CAN_OK) {
+    Serial.println(F("MCP2515 Iniciado correctamente"));
+  } else {
+    Serial.println(F("Error al iniciar el MCP2515"));
+    while (1); // Detener ejecución en caso de error
+  }
+
+  CAN.setMode(MCP_NORMAL); // Modo normal para transmisión
+  Serial.println(F("Modo CAN: Normal"));
 }
 
 void loop(){
