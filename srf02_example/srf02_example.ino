@@ -70,6 +70,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define ADDRESS_CHANGE_2ND_SEQUENCE byte(170)
 
 struct Sensor {
+  String name;
   byte address;
   byte unit;
   int min_delay;
@@ -83,6 +84,8 @@ Sensor sensor2;
 
 volatile int flag1 = 0;
 volatile int flag2 = 0;
+
+int contador = 0;
 
 inline void write_command(byte address, byte command)
 { 
@@ -128,18 +131,22 @@ void setup()
   Serial.print(SRF02_I2C_ADDRESS,HEX); Serial.print("(0x");
   Serial.print(software_revision,HEX); Serial.println(")");*/
 
+
   init_sensors();
+  
   init_TCC0();
   init_TC4_TC5();
 
-  //set_tc4_tc5_period(1000);
-  //enable_tc4_tc5_interrupt();
-
-  unit_cm(sensor1);
-  set_period_shotting(sensor1,1000);
-  //shot(sensor1);
+  probarCodigo();
 
   drawOLED();
+}
+
+void probarCodigo(){
+  shot(sensor1);
+  set_sensor_on_period(sensor2, 1000);
+  set_sensor_on_period(sensor1, 2000);
+  unit_cm(sensor1);
 }
 
 // the loop routine runs over and over again forever:
@@ -156,6 +163,9 @@ void loop()
   }
 }
 
+//ZONA DE TIMERS ---------------------------------------------------------------
+
+/* Iniciar el temporizador tcc0 encargado del sensor 1 */
 void init_TCC0() {
     // Enable power management clock for TCC0
     PM->APBCMASK.reg |= PM_APBCMASK_TCC0;
@@ -188,23 +198,26 @@ void init_TCC0() {
     while (TCC0->SYNCBUSY.bit.ENABLE);
 }
 
+/*Desactivar interrupción TCC0 para sensor 1*/
 void disable_tcc0_interrupt() {
     NVIC_DisableIRQ(TCC0_IRQn);
     TCC0->INTENCLR.reg = TCC_INTENCLR_OVF;  // Disable overflow interrupt
 }
 
-// Function to enable TCC0 interrupt
+/*Activar interrupción TCC0 para sensor 1*/
 void enable_tcc0_interrupt() {
     TCC0->INTENSET.reg = TCC_INTENSET_OVF;   // Enable overflow interrupt
     NVIC_EnableIRQ(TCC0_IRQn);
 }
 
+/*Establecer periodo de interrupcion de TCC0 para sensor 1*/
 void set_tcc0_period(int ms) {
     uint32_t period = (uint32_t)(ms * (48000000 / 1024) / 1000);
     TCC0->PER.reg = period;
     while (TCC0->SYNCBUSY.bit.PER);
 }
 
+/* Iniciar el temporizador tc4 y tc5 encargado del sensor 2 */
 void init_TC4_TC5() {
     // Enable power management clock for TC4 and TC5
     PM->APBCMASK.reg |= PM_APBCMASK_TC4 | PM_APBCMASK_TC5;
@@ -243,29 +256,50 @@ void init_TC4_TC5() {
     while (TC4->COUNT32.STATUS.bit.SYNCBUSY);
 }
 
+/*Desactivar interrupción TC4 y TC5 para sensor 2*/
 void disable_tc4_tc5_interrupt() {
     NVIC_DisableIRQ(TC4_IRQn);
     TC4->COUNT32.INTENCLR.reg = TC_INTENCLR_MC0;  // Disable match compare interrupt
 }
 
+/*Activar interrupción TC4 y TC5 para sensor 2*/
 void enable_tc4_tc5_interrupt() {
     TC4->COUNT32.INTENSET.reg = TC_INTENSET_MC0;   // Enable match compare interrupt
     NVIC_EnableIRQ(TC4_IRQn);
 }
 
+/*Establecer periodo de interrupcion de TC4 y TC5 para sensor 2*/
 void set_tc4_tc5_period(int ms) {
     uint32_t period = (uint32_t)(ms * (48000000 / 1024) / 1000);
     TC4->COUNT32.CC[0].reg = period;
     while (TC4->COUNT32.STATUS.bit.SYNCBUSY);
 }
 
+//ZONA DE OLED -----------------------------------------------------------------
+
+/*Actualizar pantalla OLED*/
 void drawOLED(){
+  Serial.print("drawOLED... ");
   display.clearDisplay();
 
   drawSensorInformationSensor1();
   drawSensorInformationSensor2();
+  //drawCont();
+  Serial.println("done");
 }
 
+void drawCont(){
+  display.setTextSize(1);             // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  display.setCursor(0,0);             // Start at top-left corner
+  display.print(F("Contador: ")); display.println(contador);
+
+  display.display();
+
+  contador++;
+}
+
+/*Dibujar información del sensor 1 en la pantalla OLED*/
 void drawSensorInformationSensor1(){
 
   display.setTextSize(1);             // Normal 1:1 pixel scale
@@ -286,6 +320,7 @@ void drawSensorInformationSensor1(){
   display.display();
 }
 
+/*Dibujar información del sensor 2 en la pantalla OLED*/
 void drawSensorInformationSensor2(){
 
   display.setTextSize(1);             // Normal 1:1 pixel scale
@@ -307,8 +342,11 @@ void drawSensorInformationSensor2(){
   display.display();
 }
 
-//cosecha propia ------------------------------
+//ZONA DE SENSORES -------------------------------------------------------------
+
+/*Inicializar sensores*/
 void init_sensors(){
+  sensor1.name = "Sensor 1";
   sensor1.address = SRF02_I2C_ADDRESS_1;
   sensor1.unit = REAL_RANGING_MODE_INCHES;
   sensor1.min_delay = SRF02_RANGING_DELAY;
@@ -316,6 +354,7 @@ void init_sensors(){
   sensor1.shotting = false;
   sensor1.last_shot = " ";
 
+  sensor2.name = "Sensor 2";
   sensor2.address = SRFO2_I2C_ADDRESS_2;
   sensor2.unit = REAL_RANGING_MODE_INCHES;
   sensor2.min_delay = SRF02_RANGING_DELAY;
@@ -324,26 +363,43 @@ void init_sensors(){
   sensor2.last_shot = " ";
 }
 
+/*Cambiar unidad de medida a cm*/
 void unit_cm(Sensor& sensor){
   sensor.unit = REAL_RANGING_MODE_CMS;
 }
 
+/*Cambiar unidad de medida a pulgadas*/
 void unit_inches(Sensor& sensor){
   sensor.unit = REAL_RANGING_MODE_INCHES;
 }
 
+/*Cambiar unidad de medida a microsegundos*/
 void unit_ms(Sensor& sensor){
   sensor.unit = REAL_RANGING_MODE_USECS;
 }
 
+/*
+Realizar una medición con el sensor
+
+@return int: distancia en la unidad de medida del sensor
+*/
 int shot(Sensor& sensor){
   write_command(sensor.address,sensor.unit);
   delay(sensor.min_delay);
 
-  byte high_byte_range=read_register(sensor.address,RANGE_HIGH_BYTE);
-  byte low_byte_range=read_register(sensor.address,RANGE_LOW_BYTE);
+  /*
+  while (read_register(sensor.address,COMMAND_REGISTER) == 0xFF){
+    delay(1);
+  }*/
 
-  uint16_t result = (uint16_t)((high_byte_range << 8) | low_byte_range);
+  //Serial.print("READ REGISTER...");
+  byte high_byte_range=read_register(sensor.address,RANGE_HIGH_BYTE);
+  //Serial.print(" first part read...");
+  byte low_byte_range=read_register(sensor.address,RANGE_LOW_BYTE);
+  //Serial.println(" done");
+  
+
+  int result = (int)((high_byte_range << 8) | low_byte_range);
   String unit_str;
 
   switch(sensor.unit) {
@@ -364,10 +420,18 @@ int shot(Sensor& sensor){
 
   drawOLED();
 
-  return int((high_byte_range<<8) | low_byte_range);
+  return result;
 }
 
-void set_period_shotting(Sensor& sensor, int period){
+/*
+Realizar disparos periodicos (periodo debe ser mayor o igual que el delay mínimo del sensor)
+@return bool: true si se ha cambiado correctamente, false en caso contrario
+*/
+bool set_sensor_on_period(Sensor& sensor, int period){
+  if (period < sensor.min_delay){
+    return false;
+  }
+
   sensor.shotting = true;
   sensor.period_delay = period;
 
@@ -380,9 +444,12 @@ void set_period_shotting(Sensor& sensor, int period){
   }
 
   drawOLED();
+
+  return true;
 }
 
-void stop_period_shotting(Sensor& sensor){
+/*Detener disparos periodicos*/
+void set_sensor_off(Sensor& sensor){
   sensor.shotting = false;
 
   if (sensor.address == SRF02_I2C_ADDRESS_1){
@@ -394,6 +461,20 @@ void stop_period_shotting(Sensor& sensor){
   drawOLED();
 }
 
+/*
+Cambia el delay mínimo de un sensor (mínimo posible 70 ms)
+
+@return bool: true si se ha cambiado correctamente, false en caso contrario
+*/
+bool set_sensor_delay(Sensor& sensor, int delay) {
+    if (delay < SRF02_RANGING_DELAY) {
+        return false;
+    }
+    sensor.min_delay = delay;
+    return true;
+}
+
+/*Devolver el status de un sensor*/
 void status(Sensor& sensor){ // falta modificar para añadir el uso del bus CAN
   Serial.print("Sensor: "); Serial.print(sensor.address);
   Serial.print(" unit: "); Serial.print(sensor.unit);
@@ -402,20 +483,17 @@ void status(Sensor& sensor){ // falta modificar para añadir el uso del bus CAN
   Serial.println();
 }
 
-//cosecha propia ------------------------------
+//ZONA DE INTERRUPCIONES -------------------------------------------------------
 
-// sensor 1
+/*Interrupción del timer TCC0 que controla el sensor 1*/
 void TCC0_Handler() {
     if (TCC0->INTFLAG.bit.OVF) {
-        // Clear the interrupt flag
         TCC0->INTFLAG.reg = TCC_INTFLAG_OVF;
-        // Add your interrupt handling code here
         flag1 = 1;
-        Serial.println("TCC0_Handler");
     }
 }
 
-// sensor 2
+/*Interrupción del timer TC4 que controla el sensor 2*/
 void TC4_Handler() {
     if (TC4->COUNT32.INTFLAG.bit.MC0) {
         TC4->COUNT32.INTFLAG.bit.MC0 = 1;    // Clear the interrupt flag
@@ -424,7 +502,3 @@ void TC4_Handler() {
         flag2 = 1;
     }
 }
-
-
-
-
