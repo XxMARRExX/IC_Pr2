@@ -19,6 +19,11 @@ union valor {
 
 void setup() {
   Serial.begin(9600);
+    while (!Serial) {
+        ;
+    }
+
+  Serial.println("Inicializando...");
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -32,11 +37,12 @@ void setup() {
   init_TCC0();       // Inicializar temporizador para el sensor 1
   init_TC4_TC5();     // Inicializar temporizador para el sensor 2
 
-  enable_tcc0_interrupt(); // Habilitar interrupciones para TCC0 (sensor 1)
-  enable_tc4_tc5_interrupt(); // Habilitar interrupciones para TC4 (sensor 2)
+  //enable_tcc0_interrupt(); // Habilitar interrupciones para TCC0 (sensor 1)
+  //enable_tc4_tc5_interrupt(); // Habilitar interrupciones para TC4 (sensor 2)
 
   drawOLED(); // Mostrar información inicial en OLED
 
+  
   // Inicializa el bus CAN
   if (CAN.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ) == CAN_OK) {
     Serial.println("MCP2515 Iniciado correctamente");
@@ -50,6 +56,9 @@ void setup() {
 }
 
 void loop() {
+  
+  checkInterrupts();
+  
   unsigned long id;     // ID del mensaje
   byte len;             // Longitud de los datos
   byte buf[8];          // Buffer para los datos
@@ -118,6 +127,21 @@ void loop() {
         sendAckToCan(deviceAddress);
       }
     }
+  }
+}
+
+/**
+ * @brief Verifica si hay interrupciones pendientes y las procesa.
+ */
+void checkInterrupts() {
+  if (flag1){
+    flag1 = 0;
+    shot(sensor1);
+  }
+
+  if (flag2){
+    flag2 = 0;
+    shot(sensor2);
   }
 }
 

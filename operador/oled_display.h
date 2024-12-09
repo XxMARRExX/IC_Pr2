@@ -18,5 +18,7 @@ extern Adafruit_SSD1306 display;
 void drawOLED();
 void drawSensorInformationSensor1();
 void drawSensorInformationSensor2();
+void turnOnOLED();
+void turnOffOLED();
 
 #endif // OLED_DISPLAY_H
