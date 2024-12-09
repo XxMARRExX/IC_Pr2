@@ -1,7 +1,11 @@
 /**
  * Author: Cristian Marrero Vega
  * Date: 23/11/2024
- * Librería instalada: mcp_can.
+ * Installed Lybraries: mcp_can.
+ * Description: Este programa permite la comunicación con el bus CAN mediante 
+ * el controlador MCP2515 y la interacción con el usuario a través de comandos 
+ * enviados por el puerto serie. Se basa en la librería mcp_can para manejar 
+ * el controlador CAN.
  */
 
 #include <SPI.h>
@@ -50,5 +54,8 @@ void loop(){
       bufferIndex = 0;
     }
   }
-
+  
 }
+
+
+
