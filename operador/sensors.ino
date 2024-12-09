@@ -1,5 +1,3 @@
-#include <Wire.h>
-#include "oled_display.h"
 #include "sensors.h"
 
 Sensor sensor1;

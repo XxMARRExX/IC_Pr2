@@ -1,4 +1,3 @@
-#include <sam.h> // Biblioteca para acceso directo a registros del SAMD21
 #include "timers.h"
 
 // Variables externas para flags
