@@ -2,28 +2,15 @@
 #include "mcp_can.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "sensors.h"
+#include "timers.h"
+#include "oled_display.h"
 
 const int SPI_CS_PIN = 3; // Pin CS del MCP2515
 MCP_CAN CAN(SPI_CS_PIN);
 
-struct Sensor {
-  String name;
-  byte address;
-  byte unit;
-  int min_delay;
-  int period_delay;
-  bool shotting;
-  String last_shot;
-};
 
-Sensor sensor1;
-Sensor sensor2;
-Sensor sensor3;
-
-Sensor* sensors[] = {&sensor1, &sensor2, &sensor3};
-
-volatile int flag1 = 0;
-volatile int flag2 = 0;
+Sensor* sensors[] = {&sensor1, &sensor2, &oled};
 
 union valor {
     byte bytes[4];

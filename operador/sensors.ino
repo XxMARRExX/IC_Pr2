@@ -1,46 +1,19 @@
 #include <Wire.h>
+#include "oled_display.h"
+#include "sensors.h"
 
-#define SRF02_I2C_ADDRESS_1 byte((0xE0)>>1)
-#define SRFO2_I2C_ADDRESS_2 byte((0xE2)>>1) // DIRECCION POR DECIDIR ----------------
-#define SRF02_I2C_INIT_DELAY 100 // in milliseconds
-#define SRF02_RANGING_DELAY 70 // milliseconds
-#define tabulador "    "
+Sensor sensor1;
+Sensor sensor2;
 
-// SRF02's command codes
-#define REAL_RANGING_MODE_INCHES    byte(80)
-#define REAL_RANGING_MODE_CMS       byte(81)
-#define REAL_RANGING_MODE_USECS     byte(82)
-#define FAKE_RANGING_MODE_INCHES    byte(86)
-#define FAKE_RANGING_MODE_CMS       byte(87)
-#define FAKE_RANGING_MODE_USECS     byte(88)
-#define TRANSMIT_8CYCLE_40KHZ_BURST byte(92)
-#define FORCE_AUTOTUNE_RESTART      byte(96)
-#define ADDRESS_CHANGE_1ST_SEQUENCE byte(160)
-#define ADDRESS_CHANGE_3RD_SEQUENCE byte(165)
-#define ADDRESS_CHANGE_2ND_SEQUENCE byte(170)
-
-// Declaración de la estructura de los sensores
-struct Sensor {
-  String name;
-  byte address;
-  byte unit;
-  int min_delay;
-  int period_delay;
-  bool shotting;
-  String last_shot;
-};
-
-// Declaraciones externas para los sensores
-extern Sensor sensor1;
-extern Sensor sensor2;
-
+Sensor oled = {"OLED", 0x3D, 0, 0, 0, false, ""};
 
 /**
  * @brief Inicializa los sensores configurando sus parámetros iniciales.
  */
 void init_sensors() {
-  sensor1 = {"Sensor 1", 0x70, 0x51, 70, 1000, false, ""};
-  sensor2 = {"Sensor 2", 0x71, 0x51, 70, 1000, false, ""};
+  //name, address, unit, min_delay, period_delay, shotting, last_shot
+  sensor1 = {"Sensor 1", SRF02_I2C_ADDRESS_1, REAL_RANGING_MODE_CMS, SRF02_RANGING_DELAY, 1000, false, ""};
+  sensor2 = {"Sensor 2", SRFO2_I2C_ADDRESS_2, REAL_RANGING_MODE_CMS, SRF02_RANGING_DELAY, 1000, false, ""};
 }
 
 
@@ -205,7 +178,7 @@ void write_command(byte address, byte command) {
  * @param reg Registro a leer.
  * @return byte Valor leído del registro.
  */
-byte read_register(byte address, byte reg) {
+byte read_register(byte address, byte the_register) {
   Wire.beginTransmission(address);
   Wire.write(the_register);
   Wire.endTransmission();

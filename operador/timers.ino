@@ -1,8 +1,9 @@
 #include <sam.h> // Biblioteca para acceso directo a registros del SAMD21
+#include "timers.h"
 
 // Variables externas para flags
-extern volatile int flag1;
-extern volatile int flag2;
+volatile int flag1 = 0;
+volatile int flag2 = 0;
 
 /**
  * @brief Inicializa el temporizador TCC0 para el sensor 1.
