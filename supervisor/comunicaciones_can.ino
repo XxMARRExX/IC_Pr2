@@ -1,4 +1,5 @@
 #define CAN_COMMAND_ID 0x200
+#define CAN_COMMAND_ACK 0x201
 
 /**
  * @brief Envía un comando "one-shot" al dispositivo especificado a través del bus CAN.
@@ -33,10 +34,20 @@ void us_on(byte deviceAddrss, int valor) {
 
   byte data[8] = {0x01, deviceAddrss};
 
-  data[2] = (valor >> 24) & 0xFF; 
-  data[3] = (valor >> 16) & 0xFF; 
-  data[4] = (valor >> 8) & 0xFF;  
-  data[5] = valor & 0xFF;         
+  data[2] = valor & 0xFF; 
+  data[3] = (valor >> 8) & 0xFF; 
+  data[4] = (valor >> 16) & 0xFF;  
+  data[5] = (valor >> 24) & 0xFF;
+
+  /*
+  Serial.println("Bytes enviados: ");
+  Serial.println(data[0], BIN);
+  Serial.println(data[1], BIN);
+  Serial.println(data[2], BIN);
+  Serial.println(data[3], BIN);
+  Serial.println(data[4], BIN);
+  Serial.println(data[5], BIN);
+  */
 
   if (CAN.sendMsgBuf(CAN_COMMAND_ID, 0, 6, data) == CAN_OK) { 
     if (!waitForAck(deviceAddrss)) {
@@ -103,10 +114,23 @@ void us_delay(byte deviceAddrss, int valor) {
 
   byte data[8] = {0x01, deviceAddrss};
 
-  data[2] = (valor >> 24) & 0xFF; 
-  data[3] = (valor >> 16) & 0xFF; 
-  data[4] = (valor >> 8) & 0xFF;  
-  data[5] = valor & 0xFF;         
+  data[2] = valor & 0xFF; 
+  data[3] = (valor >> 8) & 0xFF; 
+  data[4] = (valor >> 16) & 0xFF;  
+  data[5] = (valor >> 24) & 0xFF;       
+
+  if (CAN.sendMsgBuf(CAN_COMMAND_ID, 0, 6, data) == CAN_OK) { 
+    if (!waitForAck(deviceAddrss)) {
+      Serial.println("Error: No se recibió ACK.");
+    }
+  } else {
+    Serial.println("Error enviando mensaje.");
+  }
+}
+
+
+void switch_oled(byte operation, byte deviceAddrss){
+  byte data[8] = {operation, deviceAddrss};    
 
   if (CAN.sendMsgBuf(CAN_COMMAND_ID, 0, 6, data) == CAN_OK) { 
     if (!waitForAck(deviceAddrss)) {
@@ -145,4 +169,18 @@ bool waitForAck(byte expectedDeviceAddress) {
   }
   return false;
 
+}
+
+
+/**
+ * @brief Envía un ACK (Acknowledgment) al receptor a través del bus CAN.
+ * 
+ * @param deviceAddress Dirección del dispositivo que realiza la operación.
+ */
+void sendAckToCan(byte deviceAddress) {
+  byte ackData[1] = {deviceAddress}; // El ACK contiene la misma dirección
+
+  if (CAN.sendMsgBuf(CAN_COMMAND_ACK, 0, 1, ackData) != CAN_OK) { // ID 0x201 para ACK
+    Serial.println("Error enviando ACK.");
+  }
 }

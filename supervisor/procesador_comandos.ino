@@ -5,7 +5,6 @@
 
 char* option[2]; 
 
-
 /**
  * @brief Procesa un comando recibido desde el puerto serie.
  * 
@@ -35,15 +34,22 @@ void processCommand(char* command) {
     if(token != NULL){
       us_processor(token);
     }else{
-      // 3. Comando us
-      Serial.println(F("us."));
+      // 3. Comando us (No implementado)
+      
     }
 
   // 4. Comando help
   } else if (strcmp(token, "help") == 0) {
     help();
+  // 5. Comando switch
+  } else if (strcmp(token, "switch") == 0) {
+    if(token != NULL){
+      switch_processor();
+    }else{
+      Serial.println(F("Error de sintaxis en comando switch."));
+    }
   } else {
-    // 5. Comando no reconocido
+    // 6. Comando no reconocido
     Serial.println(F("Comando no reconocido"));
   }
 
@@ -85,6 +91,7 @@ int us_processor(char* token){
 
     token = strtok(NULL, " ");
     int valor = check_time_processor(token);
+    us_on(sensor, valor);
 
   // 4. Función off
   }else if (strcmp(token, "off") == 0){
@@ -108,17 +115,43 @@ int us_processor(char* token){
 
   // 6. Función delay
   }else if (strcmp(token, "delay") == 0){
-
-    Serial.println(F(" delay."));
+    
     token = strtok(NULL, " ");
+    int valor = check_time_processor(token);
+    us_delay(sensor, valor);
 
-  // 7. Función status
+  // 7. Función status (No implementada)
   }else if (strcmp(token, "status") == 0){
 
-    Serial.println(F(" status."));
+    
 
   }
   
+}
+
+
+/**
+ * @brief Procesa subcomandos para la pantalla oled.
+ * 
+ * Determina si se apaga o se enciende la pantalla oled.
+ * 
+ * @param token Token que identifica el sensor y el subcomando.
+ * @return int Retorna -1 si ocurre un error, 0 si el comando se procesa correctamente.
+ */
+int switch_processor(){
+
+  char* option = strtok(NULL, " ");
+
+  if (strcmp(option, "on") == 0){
+    switch_oled(0x60, oled);
+    return 0;
+  } else if(strcmp(option, "off") == 0){
+    switch_oled(0x61, oled);
+    return 0;
+  }else {
+    Serial.println(F("Opción incorrecta"));
+    return -1;
+  }
 }
 
 
@@ -131,10 +164,6 @@ int us_processor(char* token){
  * @param token Modificador de tiempo (`-s`, `-m`, `-h`).
  * @return int Tiempo en milisegundos, o -1 si ocurre un error.
  */
-int check_time_processor(char* token) {
-    ...
-}
-
 int check_time_processor(char* token){
 
   char* valor = strtok(NULL, " ");
@@ -195,12 +224,12 @@ bool esNumeroValido(const char* str) {
 void help(){
 
   Serial.println(F(" --- Comandos disponibles --- "));
-  Serial.println(F("us [us1|us2] [one-shot | on <period_ms> [h|m|s] | off]"));
+  Serial.println(F("us [us1|us2] [one-shot | on -[h|m|s] <period_ms> | off]"));
   Serial.println(F("us [us1|us2] unit [inc | cm | ms]"));
-  Serial.println(F("us [us1|us2] delay <period_ms> [h|m|s]"));
+  Serial.println(F("us [us1|us2] delay -[h|m|s] <period_ms>"));
   Serial.println(F("us [us1|us2] status"));
   Serial.println(F("us"));
-  //Serial.println(F("off oled"));
-  //Serial.println(F("on oled"));
+  Serial.println(F("switch on oled"));
+  Serial.println(F("switch off oled"));
   Serial.println(F("help"));
 }

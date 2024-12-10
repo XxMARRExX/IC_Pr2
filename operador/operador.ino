@@ -82,40 +82,51 @@ void loop() {
         
         switch (operation) {
           case 0x00:
-              shot(*selectedSensor);
-              break;
+            Serial.println("Bytes enviados: ");
+            Serial.println(operation, BIN);
+            Serial.println(deviceAddress, BIN);
+            shot(*selectedSensor);
+            break;
 
           case 0x01:
-              set_sensor_on_period(*selectedSensor, (int)periodo.value);
-              break;
+            set_sensor_on_period(*selectedSensor, (int)periodo.value);
+            break;
 
           case 0x02:
-              set_sensor_off(*selectedSensor);
-              break;
+            set_sensor_off(*selectedSensor);
+            break;
 
           case 0x10:
-              unit_inches(*selectedSensor);
-              break;
+            unit_inches(*selectedSensor);
+            break;
           
           case 0x11:
-              unit_cm(*selectedSensor);
-              break;
+            unit_cm(*selectedSensor);
+            break;
 
           case 0x12:
-              unit_ms(*selectedSensor);
-              break;
+            unit_ms(*selectedSensor);
+            break;
 
           case 0x20:
-              set_sensor_delay(*selectedSensor, (int)periodo.value);
-              break;
+            set_sensor_delay(*selectedSensor, (int)periodo.value);
+            break;
 
           case 0x30:
-              //(*selectedSensor);
-              break;
+            send_sensor_status(*selectedSensor);
+            break;
 
           case 0x40:
-              //();
-              break;
+            //();
+            break;
+
+          case 0x60:
+            turnOnOLED();
+            break;
+
+          case 0x61:
+            turnOffOLED();
+            break;
 
           default:
               Serial.println("Operación no reconocida.");
@@ -140,20 +151,6 @@ void checkInterrupts() {
   if (flag2){
     flag2 = 0;
     shot(sensor2);
-  }
-}
-
-
-/**
- * @brief Envía un ACK (Acknowledgment) al transmisor a través del bus CAN.
- * 
- * @param deviceAddress Dirección del dispositivo que realiza la operación.
- */
-void sendAckToCan(byte deviceAddress) {
-  byte ackData[1] = {deviceAddress}; // El ACK contiene la misma dirección
-
-  if (CAN.sendMsgBuf(0x201, 0, 1, ackData) != CAN_OK) { // ID 0x201 para ACK
-    Serial.println("Error enviando ACK.");
   }
 }
 
