@@ -8,7 +8,7 @@ bool oled_flag = true;
  * @brief Actualiza la pantalla OLED con información de los sensores.
  */
 void drawOLED(){
-  if (oled){
+  if (oled_flag){
     display.clearDisplay();
 
     drawSensorInformationSensor1();
