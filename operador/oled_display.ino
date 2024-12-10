@@ -2,7 +2,7 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-bool oled = true;
+bool oled_flag = true;
 
 /**
  * @brief Actualiza la pantalla OLED con información de los sensores.
@@ -64,10 +64,10 @@ void drawSensorInformationSensor2() {
 void turnOffOLED(){
   display.clearDisplay();
   display.display();
-  oled = false;
+  oled_flag = false;
 }
 
 void turnOnOLED(){
-  oled = true;
+  oled_flag = true;
   drawOLED();
 }
