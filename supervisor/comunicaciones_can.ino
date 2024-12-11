@@ -112,7 +112,11 @@ void us_unit(byte unit, byte deviceAddrss) {
  */
 void us_delay(byte deviceAddrss, int valor) {
 
-  byte data[8] = {0x01, deviceAddrss};
+  byte data[8] = {0x20, deviceAddrss};
+
+  Serial.println("Bytes enviados");
+  Serial.println(data[0], BIN);
+  Serial.println(data[1], BIN);
 
   data[2] = valor & 0xFF; 
   data[3] = (valor >> 8) & 0xFF; 
@@ -124,6 +128,7 @@ void us_delay(byte deviceAddrss, int valor) {
       Serial.println("Error: No se recibió ACK.");
     }
   } else {
+
     Serial.println("Error enviando mensaje.");
   }
 }
