@@ -108,11 +108,9 @@ bool set_sensor_on_period(Sensor& sensor, int period) {
   sensor.period_delay = period;
 
   if (sensor.address == SRF02_I2C_ADDRESS_1){
-    set_tcc0_period(period);
-    enable_tcc0_interrupt();
+    start_timer_1(period);
   } else {
-    set_tc4_tc5_period(period);
-    enable_tc4_tc5_interrupt();
+    start_timer_2(period);
   }
 
   drawOLED();
@@ -130,9 +128,9 @@ void set_sensor_off(Sensor& sensor) {
   sensor.shotting = false;
 
   if (sensor.address == SRF02_I2C_ADDRESS_1){
-    disable_tcc0_interrupt();
+    stop_timer_1();
   } else {
-    disable_tc4_tc5_interrupt();
+    stop_timer_2();
   }
 
   drawOLED();

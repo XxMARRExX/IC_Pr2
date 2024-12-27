@@ -32,11 +32,7 @@ void setup() {
   delay(100);
 
   init_sensors();
-  init_TCC0();       // Inicializar temporizador para el sensor 1
-  init_TC4_TC5();     // Inicializar temporizador para el sensor 2
-
-  //enable_tcc0_interrupt(); // Habilitar interrupciones para TCC0 (sensor 1)
-  //enable_tc4_tc5_interrupt(); // Habilitar interrupciones para TC4 (sensor 2)
+  init_timers    // Inicializar temporizadores
 
   drawOLED(); // Mostrar información inicial en OLED
 
