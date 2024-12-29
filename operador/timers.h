@@ -2,7 +2,7 @@
 #define TIMERS_H
 
 #include <sam.h> // Biblioteca para acceso directo a registros del SAMD21
-#include "tc_lib.h" // Biblioteca para configurar temporizadores
+ // Biblioteca para configurar temporizadores
 
 // External variables for flags
 extern volatile int flag1;

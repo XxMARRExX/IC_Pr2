@@ -32,7 +32,7 @@ void setup() {
   delay(100);
 
   init_sensors();
-  init_timers    // Inicializar temporizadores
+  //init_timers();   // Inicializar temporizadores
 
   drawOLED(); // Mostrar información inicial en OLED
 

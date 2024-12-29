@@ -1,4 +1,8 @@
 #include "timers.h"
+#define ARDUINO_MKR_PORT
+
+#include "tc_lib.h"
+
 using namespace tc_lib::arduino_mkr;
 
 // Variables externas para flags
@@ -7,6 +11,9 @@ volatile int flag2 = 0;
 
 int timer1_period_ms = 0;
 int timer2_period_ms = 0;
+
+action_tc4_declaration();
+action_tc5_declaration();
 
 struct ctx {
   ctx() { onoff = false; counter = 0; }
