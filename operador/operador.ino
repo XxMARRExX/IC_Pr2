@@ -36,7 +36,6 @@ void setup() {
 
   drawOLED(); // Mostrar información inicial en OLED
 
-  
   // Inicializa el bus CAN
   if (CAN.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ) == CAN_OK) {
     Serial.println("MCP2515 Iniciado correctamente");
