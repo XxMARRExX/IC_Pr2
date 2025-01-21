@@ -123,8 +123,6 @@ int us_processor(char* token){
   // 7. Función status (No implementada)
   }else if (strcmp(token, "status") == 0){
 
-    
-
   }
   
 }
@@ -233,3 +231,29 @@ void help(){
   Serial.println(F("switch off oled"));
   Serial.println(F("help"));
 }
+
+
+void receiveSensorAddresses() {
+  byte buffer[8];
+  bool finished = false;
+
+  Serial.println("Sensores disponibles:");
+  while (!finished) {
+    if (CAN.checkReceive() == CAN_MSGAVAIL) {
+      unsigned long id;
+      byte len;
+      CAN.readMsgBuf(&id, &len, buffer);
+
+      if (buffer[0] < 255) { // Fragmento de dirección
+        Serial.print("Dirección del sensor: 0x");
+        Serial.println(buffer[1], HEX);
+      } else if (buffer[0] == 255) { // Paquete final
+        Serial.println("Recepción completa de sensores.");
+        finished = true;
+      }
+    }
+  }
+}
+
+
+

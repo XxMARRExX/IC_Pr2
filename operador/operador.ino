@@ -101,9 +101,6 @@ void loop() {
             break;
 
           case 0x20:
-            Serial.println("Bytes recibidos: ");
-            Serial.println(operation, BIN);
-            Serial.println(deviceAddress, BIN);
             set_sensor_delay(*selectedSensor, (int)periodo.value);
             break;
 

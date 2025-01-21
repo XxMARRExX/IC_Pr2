@@ -147,6 +147,26 @@ void switch_oled(byte operation, byte deviceAddrss){
 }
 
 
+void sendSensorRequest(byte deviceAddress) {
+  byte data[8] = {0x30, deviceAddress}; // Comando 0x30 para solicitar estado
+
+  // Enviar solicitud al esclavo
+  if (CAN.sendMsgBuf(CAN_COMMAND_ID, 0, 8, data) == CAN_OK) {
+      if (!waitForAck(deviceAddress)) {
+          Serial.println("Error: No se recibió ACK del dispositivo.");
+          return;
+      }
+  } else {
+      Serial.println("Error enviando mensaje.");
+      return;
+  }
+
+  // Recibir y procesar los datos del sensor
+  receiveSensorStatus();
+}
+
+
+
 /**
  * @brief Espera un ACK (Acknowledgment) de un dispositivo en el bus CAN.
  * 
@@ -189,3 +209,106 @@ void sendAckToCan(byte deviceAddress) {
     Serial.println("Error enviando ACK.");
   }
 }
+
+
+void receiveSensorStatus() {
+  byte buffer[8];         // Buffer para almacenar los fragmentos
+  Sensor receivedSensor;  // Estructura para almacenar los datos recibidos
+  String receivedName = "";
+  String receivedLastShot = "";
+  bool finished = false;  // Indica si se ha recibido el paquete final
+
+  while (!finished) {
+    if (CAN.checkReceive() == CAN_MSGAVAIL) {
+      unsigned long id;
+      byte len;
+      CAN.readMsgBuf(&id, &len, buffer);
+
+      switch (buffer[0]) {
+        case 0: // Fragmento 1: Dirección, unidad y estado de disparo
+          receivedSensor.address = buffer[1];
+          receivedSensor.unit = buffer[2];
+          receivedSensor.shotting = buffer[3] == 1;
+          Serial.println("Fragmento 1 recibido:");
+          Serial.print("Dirección: ");
+          Serial.println(receivedSensor.address, HEX);
+          Serial.print("Unidad: ");
+          Serial.println(receivedSensor.unit);
+          Serial.print("Estado: ");
+          Serial.println(receivedSensor.shotting ? "Activado" : "Desactivado");
+          break;
+
+        case 1: // Fragmento 2: min_delay
+          receivedSensor.min_delay = ((unsigned long)buffer[1] << 24) |
+                                     ((unsigned long)buffer[2] << 16) |
+                                     ((unsigned long)buffer[3] << 8) |
+                                     (unsigned long)buffer[4];
+          Serial.println("Fragmento 2 recibido:");
+          Serial.print("Min delay: ");
+          Serial.println(receivedSensor.min_delay);
+          break;
+
+        case 2: // Fragmento 3: period_delay
+          receivedSensor.period_delay = ((unsigned long)buffer[1] << 24) |
+                                        ((unsigned long)buffer[2] << 16) |
+                                        ((unsigned long)buffer[3] << 8) |
+                                        (unsigned long)buffer[4];
+          Serial.println("Fragmento 3 recibido:");
+          Serial.print("Period delay: ");
+          Serial.println(receivedSensor.period_delay);
+          break;
+
+        default:
+          if (buffer[0] < 10) { // Fragmentos del nombre del sensor
+            Serial.println("Fragmento del nombre recibido:");
+            for (int i = 1; i < 8; i++) {
+              if (buffer[i] != 0x00) {
+                receivedName += (char)buffer[i];
+              }
+            }
+            Serial.print("Nombre parcial: ");
+            Serial.println(receivedName);
+          } else if (buffer[0] < 255) { // Fragmentos de la última medición
+            Serial.println("Fragmento de la última medición recibido:");
+            for (int i = 1; i < 8; i++) {
+              if (buffer[i] != 0x00) {
+                receivedLastShot += (char)buffer[i];
+              }
+            }
+            Serial.print("Última medición parcial: ");
+            Serial.println(receivedLastShot);
+          } else if (buffer[0] == 255) { // Paquete final
+            Serial.println("Paquete final recibido. Envío completo.");
+            receivedSensor.name = receivedName;
+            receivedSensor.last_shot = receivedLastShot;
+            finished = true;
+          }
+          break;
+      }
+    }
+  }
+
+  // Imprime la información completa del sensor
+  printSensorStatus(receivedSensor);
+}
+
+
+void printSensorStatus(Sensor& sensor) {
+    Serial.println("\n--- Información completa del sensor ---");
+    Serial.print("Nombre: ");
+    Serial.println(sensor.name);
+    Serial.print("Dirección: ");
+    Serial.println(sensor.address, HEX);
+    Serial.print("Unidad: ");
+    Serial.println(sensor.unit);
+    Serial.print("Min delay: ");
+    Serial.println(sensor.min_delay);
+    Serial.print("Period delay: ");
+    Serial.println(sensor.period_delay);
+    Serial.print("Estado: ");
+    Serial.println(sensor.shotting ? "Activado" : "Desactivado");
+    Serial.print("Última medición: ");
+    Serial.println(sensor.last_shot);
+    Serial.println("--------------------------------------");
+}
+
