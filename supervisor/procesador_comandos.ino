@@ -176,8 +176,12 @@ int check_time_processor(char* token){
     return -1;
   }
 
-
-  if (strcmp(token, "-s") == 0){
+  if (strcmp(token, "-ms") == 0){
+    if(numero > 86400 || numero < 0){
+      Serial.println(F("Valor fuera de rango para los milisegundos."));
+    }
+    return numero;
+  } else if (strcmp(token, "-s") == 0){
     if(numero > 86400 || numero < 0){
       Serial.println(F("Valor fuera de rango para los segundos."));
     }
